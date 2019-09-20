@@ -33,7 +33,6 @@
     "eslint": "*",
     "eslint-config-prettier": "*",
     "eslint-plugin-prettier": "^3.1.0",
-    "serverless-offline": "^5.7.2",
     "serverless-webpack": "^5.3.1",
     "ts-loader": "^6.0.4",
     "typescript": "^3.6.3",

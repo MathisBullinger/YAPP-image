@@ -8,24 +8,12 @@ provider:
 region: us-east-1
 
 functions:
-  podcast:
+  image:
     handler: src/handler.image
     events:
-      - http:
-          path: /
-          method: post
-          cors: true
-      - http:
-          path: /
-          method: get
-          cors: true
+      - stream: arn:aws:dynamodb:us-east-1:818838602878:table/podcasts/stream/2019-09-20T14:04:08.297
     environment:
       stage: ${self:provider.stage}
 
 plugins:
   - serverless-webpack
-  - serverless-offline
-
-custom:
-  serverless-offline:
-    port: 6000
