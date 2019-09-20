@@ -1,0 +1,43 @@
+{
+  "name": "yapp-image",
+  "version": "1.0.0",
+  "description": "YAPP image service",
+  "scripts": {
+    "start:offline": "sls offline",
+    "logs": "sls logs -f podcast",
+    "logs:watch": "sls logs -f image -t",
+    "deploy": "sls deploy",
+    "deploy:function": "sls deploy function -f image",
+    "prettier:check": "prettier --check \"./*.{js,ts,html}\" \"./**/*.{js,ts,html}\"",
+    "prettier:write": "prettier --write \"./*.{js,ts,html}\" \"./**/*.{js,ts,html}\"",
+    "eslint:check": "eslint . --ext .js,.ts",
+    "eslint:write": "eslint . --ext .js,.ts --fix",
+    "lint": "npm run eslint:check && npm run prettier:check",
+    "format": "npm run eslint:write && npm run prettier:write"
+  },
+  "author": "Mathis Bullinger",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/plugin-proposal-object-rest-spread": "^7.5.5",
+    "@babel/plugin-transform-runtime": "^7.6.0",
+    "@babel/preset-env": "^7.5.5",
+    "@babel/preset-typescript": "^7.3.3",
+    "@typescript-eslint/eslint-plugin": "^1.13.0",
+    "@typescript-eslint/parser": "^1.13.0",
+    "babel-eslint": "^10.0.1",
+    "babel-loader": "^8.0.6",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.7.0",
+    "eslint": "*",
+    "eslint-config-prettier": "*",
+    "eslint-plugin-prettier": "^3.1.0",
+    "serverless-offline": "^5.7.2",
+    "serverless-webpack": "^5.3.1",
+    "ts-loader": "^6.0.4",
+    "typescript": "^3.6.3",
+    "webpack": "^4.35.0",
+    "webpack-cli": "^3.3.9"
+  }
+}

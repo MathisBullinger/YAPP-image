@@ -1,0 +1,31 @@
+service: image
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: ${opt:stage, 'dev'}
+
+region: us-east-1
+
+functions:
+  podcast:
+    handler: src/handler.image
+    events:
+      - http:
+          path: /
+          method: post
+          cors: true
+      - http:
+          path: /
+          method: get
+          cors: true
+    environment:
+      stage: ${self:provider.stage}
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    port: 6000
