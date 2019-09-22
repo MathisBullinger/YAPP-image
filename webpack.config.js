@@ -1,48 +1,43 @@
-const slsw = require("serverless-webpack")
+const slsw = require('serverless-webpack')
 
 module.exports = {
   entry: slsw.lib.entries,
-  target: "node",
-  devtool: "source-map",
-  mode: slsw.lib.webpack.isLocal ? "development" : "production",
+  target: 'node',
+  devtool: 'source-map',
+  mode: slsw.lib.webpack.isLocal ? 'development' : 'production',
   optimization: {
-    minimize: false
+    minimize: false,
   },
   performance: {
-    hints: false
+    hints: false,
   },
   resolve: {
-    mainFields: ["main", "module"],
-    extensions: [".ts", ".js"]
+    mainFields: ['main', 'module'],
+    extensions: ['.ts', '.js'],
   },
   module: {
     rules: [
       {
-        test: /\.ts(x?)$/,
+        test: /\.ts$/,
         exclude: /node_modules/,
         use: [
           {
-            loader: "babel-loader"
+            loader: 'babel-loader',
           },
           {
-            loader: "ts-loader"
-          }
-        ]
+            loader: 'ts-loader',
+          },
+        ],
       },
       {
         test: /\.js$/,
         exclude: /node_modules/,
         use: [
           {
-            loader: "babel-loader"
-          }
-        ]
+            loader: 'babel-loader',
+          },
+        ],
       },
-      {
-        test: /\.(graphql|gql)$/,
-        exclude: /node_modules/,
-        loader: "graphql-tag/loader"
-      }
-    ]
-  }
+    ],
+  },
 }

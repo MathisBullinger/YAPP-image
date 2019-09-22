@@ -25,12 +25,7 @@ jobs:
           name: Install Dependencies
           command: npm install
 
-      - run: |
-          if [ "${CIRCLE_BRANCH}" == "master" ]; then
-            sls deploy --stage prod
-          elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
-            sls deploy --stage dev
-          fi
+      - run: sls deploy --stage prod
 
       - save_cache:
           paths:
@@ -46,4 +41,3 @@ workflows:
             branches:
               only:
                 - master
-                - develop
