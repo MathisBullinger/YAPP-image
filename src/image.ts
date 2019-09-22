@@ -13,6 +13,7 @@ export const resize = async (url: string) => {
 
   const image = sharp(data)
   const meta = await image.metadata()
+  const imgSize = Math.max(meta.width, meta.height)
 
   const resize = (img: sharp.Sharp, size: number) =>
     img.clone().resize(null, null, {
@@ -22,12 +23,16 @@ export const resize = async (url: string) => {
   const toFormat = (img: sharp.Sharp, format: string) =>
     meta.format === format ? img : img[format]()
 
-  const sized = sizes.map(size => resize(image, size))
+  const sized = sizes
+    .filter(size => size < imgSize)
+    .map(size => ({ img: resize(image, size), size }))
+
+  if (Math.max(...sizes) > imgSize) sized.push({ img: image, size: imgSize })
 
   await Promise.all(
     formats.map(format =>
-      sized.map((img, i) =>
-        toFormat(img, format).toFile(`img/img${sizes[i]}.${format}`)
+      sized.map(({ img, size }) =>
+        toFormat(img, format).toFile(`img/img${size}.${format}`)
       )
     )
   )
