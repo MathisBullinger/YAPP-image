@@ -19,13 +19,15 @@ export const resize = async (url: string) => {
       [meta.width >= meta.height ? 'width' : 'height']: size,
       kernel: sharp.kernel.cubic,
     })
+  const toFormat = (img: sharp.Sharp, format: string) =>
+    meta.format === format ? img : img[format]()
 
   const sized = sizes.map(size => resize(image, size))
 
   await Promise.all(
     formats.map(format =>
       sized.map((img, i) =>
-        img[format]().toFile(`img/img${sizes[i]}.${format}`)
+        toFormat(img, format).toFile(`img/img${sizes[i]}.${format}`)
       )
     )
   )
