@@ -17,3 +17,8 @@ functions:
 
 plugins:
   - serverless-webpack
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    port: 9000
