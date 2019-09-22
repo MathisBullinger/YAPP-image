@@ -1,4 +1,4 @@
-export const image = async (event, context) => {
+export const image = async event => {
   const newItems = event.Records.filter(
     ({ eventName }) => eventName === 'INSERT'
   ).map(event => event.dynamodb.NewImage)
