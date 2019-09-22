@@ -3,26 +3,31 @@ import axios from 'axios'
 import sharp from 'sharp'
 
 export const resize = async (url: string) => {
+  const sizes = [256, 512, 1024]
+  const formats = ['jpeg', 'webp']
+
   axios({ method: 'get', url, responseType: 'arraybuffer' }).then(
     ({ data }) => {
-      const fsStream = fs.createWriteStream('img/img.jpg')
-
       const image = sharp(data)
-      image
-        .metadata()
-        .then(({ width, height }) =>
-          image
-            .resize({
-              [width >= height ? 'width' : 'height']: 500,
-              kernel: sharp.kernel.cubic,
-            })
-            .jpeg()
-            .toBuffer()
-        )
-        .then(function(data) {
-          fsStream.write(data)
-          fsStream.end()
+      sizes.forEach(size => {
+        image.metadata().then(meta => {
+          const tmp = image.resize({
+            [meta.width >= meta.height ? 'width' : 'height']: size,
+            kernel: sharp.kernel.cubic,
+          })
+          formats.forEach(format =>
+            tmp[format]()
+              .toBuffer()
+              .then(data => {
+                const fsStream = fs.createWriteStream(
+                  `img/img${size}.${format}`
+                )
+                fsStream.write(data)
+                fsStream.end()
+              })
+          )
         })
+      })
     }
   )
 }
