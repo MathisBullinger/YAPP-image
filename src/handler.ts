@@ -24,12 +24,11 @@ export const image = async event => {
     .map(([podId]) => ({ podId, SK: 'meta' }))
 
   if (metaQueries.length) {
-    ;(await dbClient
+    const { result } = await dbClient
       .newBatchGetBuilder()
       .requestItems('podcasts', metaQueries)
-      .execute())
-      .map(formatData)
-      .forEach(meta => podcasts[meta.podId].push(meta))
+      .execute()
+    result.podcasts.forEach(meta => podcasts[meta.podId].push(meta))
   }
 
   return { statusCode: 200 }
