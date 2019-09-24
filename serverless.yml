@@ -14,6 +14,8 @@ functions:
       - stream: arn:aws:dynamodb:us-east-1:818838602878:table/podcasts/stream/2019-09-20T14:04:08.297
     environment:
       stage: ${self:provider.stage}
+      IMGSERV_AWS_KEY_ID: ${ssm:IMGSERV_AWS_KEY_ID}
+      IMGSERV_AWS_KEY_SECRET: ${ssm:IMGSERV_AWS_KEY_SECRET}
 
 plugins:
   - serverless-webpack
