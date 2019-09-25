@@ -22,5 +22,13 @@ plugins:
   - serverless-offline
 
 custom:
+  bucket:
   serverless-offline:
     port: 9000
+  webpack:
+    webpackConfig: 'webpack.config.js'
+    includeModules:
+      forceExlude:
+        - aws-sdk
+    packager: 'npm'
+    excludeFiles: src/**/*.test.ts

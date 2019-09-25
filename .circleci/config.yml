@@ -25,7 +25,7 @@ jobs:
           name: Install Dependencies
           command: npm install
 
-      - run: sls deploy --stage prod
+      - run: npm run deploy
 
       - save_cache:
           paths:
