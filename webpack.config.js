@@ -53,10 +53,11 @@ module.exports = {
   plugins: [
     {
       apply: compiler => {
-        compiler.hooks.done.tap('Linux Binaries', compilation => {
+        compiler.hooks.done.tapAsync('Linux Binaries', (arg, callback) => {
           exec('./prep.sh', (err, stdout, stderr) => {
             if (stdout) process.stdout.write(stdout)
             if (stderr) process.stderr.write(stderr)
+            callback()
           })
         })
       },
