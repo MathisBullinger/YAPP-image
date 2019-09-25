@@ -1,8 +1,10 @@
 import axios from 'axios'
 import sharp from 'sharp'
 
-export const resize = async (url: string) => {
-  const sizes = [256, 512, 1024]
+export const resize = async (
+  url: string,
+  sizes: number[] = [256, 512, 1024]
+): Promise<({ img: Promise<Buffer>; size: number; format: string })[]> => {
   const formats = ['jpeg', 'webp']
 
   const { data } = await axios({
@@ -15,12 +17,12 @@ export const resize = async (url: string) => {
   const meta = await image.metadata()
   const imgSize = Math.max(meta.width, meta.height)
 
-  const resize = (img: sharp.Sharp, size: number) =>
+  const resize = (img: sharp.Sharp, size: number): sharp.Sharp =>
     img.clone().resize(null, null, {
       [meta.width >= meta.height ? 'width' : 'height']: size,
       kernel: sharp.kernel.cubic,
     })
-  const toFormat = (img: sharp.Sharp, format: string) =>
+  const toFormat = (img: sharp.Sharp, format: string): sharp.Sharp =>
     meta.format === format ? img : img[format]()
 
   const sized = sizes
@@ -29,11 +31,11 @@ export const resize = async (url: string) => {
 
   if (Math.max(...sizes) > imgSize) sized.push({ img: image, size: imgSize })
 
-  await Promise.all(
-    formats.map(format =>
-      sized.map(({ img, size }) =>
-        toFormat(img, format).toFile(`img/img${size}.${format}`)
-      )
-    )
+  return formats.flatMap(format =>
+    sized.map(({ img, size }) => ({
+      img: toFormat(img, format).toBuffer(),
+      size,
+      format,
+    }))
   )
 }
