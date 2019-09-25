@@ -61,29 +61,10 @@ export const image = async event => {
         Promise.all(
           imgArr.map(({ img, size, format }) =>
             Promise.all([
-              new Promise(resolve => {
-                img.then(data =>
-                  s3
-                    .upload({
-                      Bucket: 'yapp-images',
-                      Key: `${podId}_${SK}_${size}.${format}`,
-                      Body: data,
-                      ACL: 'public-read',
-                    })
-                    .promise()
-                    .then(resolve)
-                )
-              }),
-              dbClient
-                .newUpdateBuilder('podcasts')
-                .setHashKey('podId', podId)
-                .setRangeKey('SK', SK)
-                .putAttribute(
-                  `img_${format}_${size}`,
-                  `https://yapp-images.s3.amazonaws.com/${podId}_${SK}_${size}.${format}`
-                )
-                .enableUpsert()
-                .execute(),
+              img.then(data =>
+                upload(`${podId}_${SK}_${size}.${format}`, data)
+              ),
+              storeImgLink(podId, SK, size, format),
             ])
           )
         )
@@ -92,6 +73,48 @@ export const image = async event => {
   )
 
   return { statusCode: 200 }
+}
+
+function upload(name: string, data: Buffer): Promise<void> {
+  return new Promise((resolve: () => void, reject) => {
+    s3.upload({
+      Bucket: 'yapp-images',
+      Key: name,
+      Body: data,
+      ACL: 'public-read',
+    })
+      .promise()
+      .then(resolve)
+      .catch(err => {
+        console.log('error while upload image', name)
+        reject(err)
+      })
+  })
+}
+
+function storeImgLink(
+  podId: string,
+  SK: string,
+  size: number,
+  format: string
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    dbClient
+      .newUpdateBuilder('podcasts')
+      .setHashKey('podId', podId)
+      .setHashKey('SK', SK)
+      .enableUpsert()
+      .putAttribute(
+        `img_${format}_${size}`,
+        `https://yapp-images.s3.amazonaws.com/_${podId}_${SK}_${size}.${format}`
+      )
+      .execute()
+      .then(resolve)
+      .fail(err => {
+        console.log('error while storing image link', podId, SK, size, format)
+        reject(err)
+      })
+  })
 }
 
 const formatData = data =>
