@@ -4,6 +4,7 @@ provider:
   name: aws
   runtime: nodejs10.x
   stage: ${opt:stage, 'prod'}
+  timeout: 30
 
 region: us-east-1
 

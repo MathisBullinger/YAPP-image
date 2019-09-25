@@ -1,4 +1,5 @@
 import axios from 'axios'
+// @ts-ignore
 import sharp from 'sharp'
 
 export const resize = async (

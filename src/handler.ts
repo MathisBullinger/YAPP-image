@@ -54,13 +54,13 @@ export const image = async event => {
     }
   }
 
-  // resize & upload all images to s3
+  // resize images, upload to s3 and link in db
   await Promise.all(
     imgReq.map(({ img: url, podId, SK }) =>
       resize(url).then(imgArr =>
         Promise.all(
-          imgArr.map(
-            ({ img, size, format }) =>
+          imgArr.map(({ img, size, format }) =>
+            Promise.all([
               new Promise(resolve => {
                 img.then(data =>
                   s3
@@ -73,7 +73,18 @@ export const image = async event => {
                     .promise()
                     .then(resolve)
                 )
-              })
+              }),
+              dbClient
+                .newUpdateBuilder('podcasts')
+                .setHashKey('podId', podId)
+                .setRangeKey('SK', SK)
+                .putAttribute(
+                  `img_${format}_${size}`,
+                  `https://yapp-images.s3.amazonaws.com/${podId}_${SK}_${size}.${format}`
+                )
+                .enableUpsert()
+                .execute(),
+            ])
           )
         )
       )
