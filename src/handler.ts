@@ -1,4 +1,3 @@
-import 'core-js/fn/array/flat-map'
 import * as db from './dynamodb'
 import { S3 } from 'aws-sdk'
 import { resize } from './image'
@@ -6,16 +5,12 @@ import { resize } from './image'
 const s3 = new S3()
 
 export const image = async event => {
-  console.log(...event.Records.map(e => e.eventName))
-
   // get newly inserted items
   const items: db.Item[] = event.Records.filter(
     ({ eventName }) => eventName === 'INSERT'
   ).map(event => formatData(event.dynamodb.NewImage))
 
   if (items.length === 0) return
-
-  console.log('podcast:', ...new Set(items.map(item => item.podId)))
 
   // bundle by podId
   const podcasts: {
@@ -39,9 +34,7 @@ export const image = async event => {
     }))
 
   if (metaQueries.length) {
-    console.log('get missing:', ...metaQueries.map(({ podId }) => podId))
     const result = await db.batchGet(metaQueries)
-    console.log('result:', result)
     result.forEach(meta => podcasts[meta.podId].push(meta))
   }
 
@@ -62,6 +55,18 @@ export const image = async event => {
       key.startsWith('img_') ? (console.log('skip', req.title), false) : true
     )
   )
+
+  Object.values(podcasts)
+    .flat()
+    .forEach(item =>
+      console.log(
+        `${
+          imgReq.find(req => req.podId === item.podId && req.SK === item.SK)
+            ? 'add '
+            : 'skip'
+        } ${item.title || item.name}`
+      )
+    )
 
   // resize images, upload to s3 and link in db
   await Promise.all(
@@ -84,7 +89,7 @@ export const image = async event => {
     )
   )
 
-  return { statusCode: 200 }
+  return
 }
 
 function upload(name: string, data: Buffer): Promise<void> {
@@ -118,6 +123,7 @@ const storeImgLink = (
   )
 
 const formatData = data =>
-  Object.entries(data)
-    .filter(([k]) => ['podId', 'SK', 'img'].includes(k))
-    .reduce((a, [k, v]) => Object.assign(a, { [k]: v['S'] }), {})
+  Object.entries(data).reduce(
+    (a, [k, v]) => Object.assign(a, { [k]: v['S'] }),
+    {}
+  )

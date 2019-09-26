@@ -1,14 +1,8 @@
-const path = require('path')
 const slsw = require('serverless-webpack')
 const exec = require('child_process').exec
 
 module.exports = {
   entry: slsw.lib.entries,
-  output: {
-    libraryTarget: 'commonjs',
-    path: path.resolve(__dirname, '.webpack'),
-    filename: '[name].js',
-  },
   target: 'node',
   devtool: 'source-map',
   mode: slsw.lib.webpack.isLocal ? 'development' : 'production',
