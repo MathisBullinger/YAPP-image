@@ -12,10 +12,8 @@ export const image = async event => {
   const items: db.Item[] = event.Records.filter(
     ({ eventName }) => eventName === 'INSERT'
   ).map(event => formatData(event.dynamodb.NewImage))
-  if (items.length === 0) {
-    console.log('no items inserted')
-    return
-  }
+
+  if (items.length === 0) return
 
   console.log('podcast:', ...new Set(items.map(item => item.podId)))
 
@@ -71,12 +69,15 @@ export const image = async event => {
       resize(url).then(imgArr =>
         Promise.all(
           imgArr.map(({ img, size, format }) =>
-            Promise.all([
-              img.then(data =>
+            Promise.all([img, storeImgLink(podId, SK, size, format)])
+              .then(([data]) =>
                 upload(`${podId}_${SK}_${size}.${format}`, data)
-              ),
-              storeImgLink(podId, SK, size, format),
-            ])
+              )
+              .catch(err => {
+                if (err.code === 'ConditionalCheckFailedException')
+                  console.log("item doesn't exist any more")
+                else throw err
+              })
           )
         )
       )

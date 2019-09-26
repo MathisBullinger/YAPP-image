@@ -68,10 +68,15 @@ export const update = (
         UpdateExpression: `set ${Object.keys(props)
           .map(k => `${k}=:${k}`)
           .join(', ')}`,
-        ExpressionAttributeValues: Object.entries(props).reduce(
-          (a, [k, v]) => ({ ...a, ...{ [`:${k}`]: v } }),
-          {}
-        ),
+        ConditionExpression: 'podId = :podId AND SK = :SK',
+        ExpressionAttributeValues: {
+          ...Object.entries(props).reduce(
+            (a, [k, v]) => ({ ...a, ...{ [`:${k}`]: v } }),
+            {}
+          ),
+          ':podId': key.podId,
+          ':SK': key.SK,
+        },
         ReturnValues: 'UPDATED_NEW',
       })
       .promise()
