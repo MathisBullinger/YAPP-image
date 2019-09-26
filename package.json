@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "YAPP image service",
   "scripts": {
-    "test": "npx jest",
+    "test": "source .env && npx jest",
     "start:offline": "sls offline",
     "logs": "sls logs -f podcast",
     "logs:watch": "sls logs -f image -t",
@@ -50,7 +50,6 @@
   "dependencies": {
     "@babel/runtime": "^7.6.2",
     "axios": "^0.19.0",
-    "dynamite": "^0.10.1",
     "sharp": "^0.23.0"
   }
 }

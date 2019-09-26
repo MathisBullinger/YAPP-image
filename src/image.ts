@@ -8,19 +8,26 @@ export const resize = async (
 ): Promise<({ img: Promise<Buffer>; size: number; format: string })[]> => {
   const formats = ['jpeg', 'webp']
 
-  const { data } = await axios({
-    method: 'get',
-    url,
-    responseType: 'arraybuffer',
-  })
+  let data: Buffer
+  try {
+    const response = await axios({
+      method: 'get',
+      url,
+      responseType: 'arraybuffer',
+    })
+    data = response.data
+  } catch (err) {
+    console.error('error while downloading image')
+    throw err
+  }
 
   const image = sharp(data)
   const meta = await image.metadata()
   const imgSize = Math.max(meta.width, meta.height)
 
   const resize = (img: sharp.Sharp, size: number): sharp.Sharp =>
-    img.clone().resize(null, null, {
-      [meta.width >= meta.height ? 'width' : 'height']: size,
+    img.clone().resize(size, size, {
+      fit: 'cover',
       kernel: sharp.kernel.cubic,
     })
   const toFormat = (img: sharp.Sharp, format: string): sharp.Sharp =>

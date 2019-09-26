@@ -4,3 +4,4 @@ node_modules
 .webpackCache
 .DS_Store
 img
+.env
