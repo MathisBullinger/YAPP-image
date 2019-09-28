@@ -16,15 +16,6 @@ try {
 const docClient = new AWS.DynamoDB.DocumentClient()
 const table = 'podcasts'
 
-export interface Key {
-  podId: string
-  SK: string
-}
-
-export interface Item extends Key {
-  [prop: string]: any
-}
-
 export const get = (key: Key): Promise<Item> =>
   new Promise((resolve, reject) =>
     docClient

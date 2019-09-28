@@ -12,7 +12,7 @@ functions:
   image:
     handler: src/handler.image
     events:
-      - stream: arn:aws:dynamodb:us-east-1:818838602878:table/podcasts/stream/2019-09-26T18:24:58.749
+      - stream: arn:aws:dynamodb:us-east-1:818838602878:table/podcasts/stream/2019-09-27T13:05:56.472
     environment:
       stage: ${self:provider.stage}
       IMGSERV_AWS_KEY_ID: ${ssm:IMGSERV_AWS_KEY_ID}

@@ -1,49 +1,33 @@
-import axios from 'axios'
 // @ts-ignore
 import sharp from 'sharp'
 
+type Format = 'jpeg' | 'webp'
+
 export const resize = async (
-  url: string,
-  sizes: number[] = [256, 512, 1024]
-): Promise<({ img: Promise<Buffer>; size: number; format: string })[]> => {
-  const formats = ['jpeg', 'webp']
+  data: Buffer,
+  sizes: number[],
+  formats: Format[] = ['jpeg', 'webp']
+) => {
+  const img = sharp(data)
+  const meta = await img.metadata()
 
-  let data: Buffer
-  try {
-    const response = await axios({
-      method: 'get',
-      url,
-      responseType: 'arraybuffer',
-    })
-    data = response.data
-  } catch (err) {
-    console.error('error while downloading image')
-    throw err
-  }
+  const imgSize = Math.min(meta.width, meta.height)
+  if (Math.max(...sizes) > imgSize)
+    sizes = [...sizes.filter(size => size < imgSize), imgSize]
 
-  const image = sharp(data)
-  const meta = await image.metadata()
-  const imgSize = Math.max(meta.width, meta.height)
-
-  const resize = (img: sharp.Sharp, size: number): sharp.Sharp =>
-    img.clone().resize(size, size, {
-      fit: 'cover',
-      kernel: sharp.kernel.cubic,
-    })
-  const toFormat = (img: sharp.Sharp, format: string): sharp.Sharp =>
-    meta.format === format ? img : img[format]()
-
-  const sized = sizes
-    .filter(size => size < imgSize)
-    .map(size => ({ img: resize(image, size), size }))
-
-  if (Math.max(...sizes) > imgSize) sized.push({ img: image, size: imgSize })
+  const sized = sizes.map(size => ({ img: resizeImg(img, size), size }))
 
   return formats.flatMap(format =>
-    sized.map(({ img, size }) => ({
-      img: toFormat(img, format).toBuffer(),
-      size,
-      format,
-    }))
+    sized.map(({ img: raw, size }) =>
+      (meta.format === format ? raw : raw[format]())
+        .toBuffer()
+        .then(img => ({ img, size, format }))
+    )
   )
 }
+
+const resizeImg = (img: sharp.Sharp, size: number): sharp.Sharp =>
+  img.clone().resize(size, size, {
+    fit: 'cover',
+    kernel: sharp.kernel.cubic,
+  })
