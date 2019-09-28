@@ -6,6 +6,9 @@ import axios from 'axios'
 
 const s3 = new S3()
 
+const EPI_SIZES = [64, 128, 256, 512]
+const POD_SIZES = [...EPI_SIZES, 1024]
+
 export const image = async event => {
   const streamKeys = pipe(
     event.Records,
@@ -28,9 +31,9 @@ export const image = async event => {
 
   log(items, imgRequests)
 
-  const processItem = ({ img: url, podId, SK }: Item) =>
+  const processItem = ({ img: url, podId, SK, sizes }: typeof imgRequests[0]) =>
     downloadImage(url).then(data =>
-      resize(data, [400]).then(resProms =>
+      resize(data, sizes).then(resProms =>
         resProms.map(resProm =>
           resizeImg(resProm).then(({ img, size, format }) =>
             Promise.all([
@@ -124,20 +127,40 @@ const completeMetaKeys = (keys: KeyMap): KeyMap =>
 function log(items: Item[], requests: Item[]) {
   items.forEach(it =>
     console.log(
-      `${requests.includes(it) ? 'add ' : 'skip'} ${it.title || it.name}`
+      `${
+        requests.find(({ podId, SK }) => podId === it.podId && SK === it.SK)
+          ? 'add '
+          : 'skip'
+      } ${it.title || it.name}`
     )
   )
 }
 
-const getImgRequests = (items: Item[], streamKeys: Key[]): Item[] =>
-  items.filter(
-    item =>
-      item.img &&
-      !Object.keys(item).find(k => k.startsWith('img_')) &&
-      ((item.SK === 'meta' && streamKeys.includes(item)) ||
-        items.find(({ podId, SK }) => podId === item.podId && SK === 'meta')
-          .img !== item.img)
-  )
+const getImgRequests = (
+  items: Item[],
+  streamKeys: Key[]
+): (Item & { sizes: number[] })[] =>
+  items
+    .filter(
+      item =>
+        item.img &&
+        ((item.SK === 'meta' &&
+          streamKeys.find(
+            ({ podId, SK }) => podId === item.podId && SK === 'meta'
+          )) ||
+          items.find(({ podId, SK }) => podId === item.podId && SK === 'meta')
+            .img !== item.img)
+    )
+    .map(item => ({
+      ...item,
+      sizes: (item.SK === 'meta' ? POD_SIZES : EPI_SIZES).filter(
+        size =>
+          !Object.keys(item).find(
+            key => key.startsWith('size') && key.endsWith(size.toString())
+          )
+      ),
+    }))
+    .filter(({ sizes }) => sizes.length > 0)
 
 const downloadImage = (url: string): Promise<Buffer> =>
   new Promise((resolve, reject) =>
@@ -173,7 +196,7 @@ const resizeImg = (
   img: Promise<{ img: Buffer; size: number; format: string }>
 ): typeof img =>
   new Promise((res, rej) => {
-    promiseTimeout(img, 5000)
+    promiseTimeout(img, 15000)
       .then(res)
       .catch(err => {
         if (err === 'timeout') console.warn(`timeout while resizing`)

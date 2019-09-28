@@ -29,5 +29,5 @@ export const resize = async (
 const resizeImg = (img: sharp.Sharp, size: number): sharp.Sharp =>
   img.clone().resize(size, size, {
     fit: 'cover',
-    kernel: sharp.kernel.cubic,
+    kernel: sharp.kernel.lanczos3,
   })
