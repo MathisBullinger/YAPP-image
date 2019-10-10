@@ -2,3 +2,6 @@ node_modules
 .serverless
 .webpack
 .webpackCache
+.DS_Store
+img
+.env

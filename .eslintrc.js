@@ -1,12 +1,14 @@
 const path = require('path')
 
 const config = {
-  extends: ['eslint:recommended', 'prettier/react'],
+  extends: ['eslint:recommended', 'prettier/react', 'plugin:jest/recommended'],
   parser: '@typescript-eslint/parser',
-  plugins: ['prettier', '@typescript-eslint'],
+  plugins: ['prettier', '@typescript-eslint', 'jest'],
   env: {
     node: true,
+
     es6: true,
+    'jest/globals': true,
   },
   parserOptions: {
     parser: 'babel-eslint',
