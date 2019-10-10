@@ -3,6 +3,7 @@ import { S3, DynamoDBStreams as Stream } from 'aws-sdk'
 import { resize } from './image'
 import pipe from './pipe'
 import axios from 'axios'
+import vibrant from 'node-vibrant'
 
 const s3 = new S3()
 
@@ -10,6 +11,8 @@ const EPI_SIZES = [64, 128, 256, 512]
 const POD_SIZES = [...EPI_SIZES, 1024]
 
 export const image = async event => {
+  console.log(event.Records.map(({ eventName }) => eventName).join())
+
   const streamKeys = pipe(
     event.Records,
     filterEventType('INSERT'),
@@ -17,6 +20,9 @@ export const image = async event => {
   )
 
   if (streamKeys.length === 0) return
+  console.log(
+    `${streamKeys.length} valid key${streamKeys.length > 1 ? 's' : ''}`
+  )
 
   const keys = pipe(
     streamKeys,
@@ -33,16 +39,19 @@ export const image = async event => {
 
   const processItem = ({ img: url, podId, SK, sizes }: typeof imgRequests[0]) =>
     downloadImage(url).then(data =>
-      resize(data, sizes).then(resProms =>
-        resProms.map(resProm =>
-          resizeImg(resProm).then(({ img, size, format }) =>
-            Promise.all([
-              upload(`${podId}_${SK}_${size}.${format}`, img),
-              storeImgLink(podId, SK, size, format),
-            ])
+      Promise.all([
+        resize(data, sizes).then(resProms =>
+          resProms.map(resProm =>
+            resizeImg(resProm).then(({ img, size, format }) =>
+              Promise.all([
+                upload(`${podId}_${SK}_${size}.${format}`, img),
+                storeImgLink(podId, SK, size, format),
+              ])
+            )
           )
-        )
-      )
+        ),
+        SK === 'meta' ? extractProminent(data, podId, SK) : null,
+      ])
     )
 
   await Promise.all(
@@ -203,3 +212,20 @@ const resizeImg = (
         rej(err)
       })
   })
+
+async function extractProminent(img: Buffer, podId, SK) {
+  const t0 = new Date().getTime()
+  return vibrant
+    .from(img)
+    .getPalette()
+    .then(
+      palette => (
+        console.log(`colors extracted in ${new Date().getTime() - t0}ms`),
+        Object.fromEntries(
+          Object.entries(palette).map(([k, v]) => [`cl${k}`, v.getHex()])
+        )
+      )
+    )
+    .then(colors => db.update({ podId, SK }, colors))
+    .catch(console.warn)
+}
